@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadHunter Pro — NG Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070f;
+  --s:#0e0e1c;
+  --s2:#14142a;
+  --b:#1e1e3a;
+  --b2:#2a2a4a;
+
+  /* Vibrant accent palette */
+  --lime:#b5f000;
+  --cyan:#00f5d4;
+  --pink:#ff2d78;
+  --orange:#ff7c1f;
+  --purple:#8b5cf6;
+  --gold:#ffd166;
+
+  --t:#f0f0ff;
+  --m:#6b7baa;
+  --m2:#444466;
+
+  --font-head:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--t);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.022;
+  pointer-events:none;
+  z-index:999;
+}
+
+/* ── GLOW ORBS ── */
+.orb{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+  z-index:0;
+  animation:orbFloat 12s ease-in-out infinite;
+}
+.orb-1{width:500px;height:500px;background:rgba(181,240,0,.06);top:-150px;left:-100px;animation-delay:0s}
+.orb-2{width:400px;height:400px;background:rgba(0,245,212,.05);top:30%;right:-100px;animation-delay:-4s}
+.orb-3{width:350px;height:350px;background:rgba(255,45,120,.05);bottom:10%;left:20%;animation-delay:-8s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+/* ════════════════════════
+   LAYOUT
+════════════════════════ */
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:240px;
+  flex-shrink:0;
+  background:var(--s);
+  border-right:1px solid var(--b);
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  z-index:50;
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--b);
+}
+.logo-lockup{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+  box-shadow:0 0 20px rgba(181,240,0,.3);
+}
+.logo-text{
+  font-family:var(--font-head);
+  font-weight:800;
+  font-size:15px;
+  letter-spacing:-.5px;
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo-sub{font-size:9px;color:var(--m);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+
+.nav-section{padding:16px 12px 8px}
+.nav-label{font-size:9px;font-weight:700;color:var(--m2);text-transform:uppercase;letter-spacing:1.5px;padding:0 8px;margin-bottom:6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:10px;
+  cursor:pointer;
+  font-size:13px;font-weight:500;
+  color:var(--m);
+  transition:all .2s;
+  margin-bottom:2px;
+  border:1px solid transparent;
+  text-decoration:none;
+}
+.nav-item:hover{background:var(--s2);color:var(--t);border-color:var(--b)}
+.nav-item.active{
+  background:linear-gradient(135deg,rgba(181,240,0,.1),rgba(0,245,212,.07));
+  border-color:rgba(181,240,0,.25);
+  color:var(--lime);
+}
+.nav-item .ni{font-size:16px;width:20px;text-align:center}
+.nav-badge{
+  margin-left:auto;
+  background:var(--pink);
+  color:#fff;
+  font-size:9px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:20px;
+  min-width:18px;
+  text-align:center;
+}
+
+.sidebar-cities{padding:0 12px 12px}
+.city-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:8px;
+  cursor:pointer;
+  font-size:12px;font-weight:600;
+  color:var(--m);
+  transition:all .2s;
+  margin-bottom:2px;
+  border:1px solid transparent;
+}
+.city-btn:hover{background:var(--s2);color:var(--t)}
+.city-btn.active{color:var(--t);background:var(--s2);border-color:var(--b)}
+.city-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--b)}
+.sidebar-footer-btn{
+  width:100%;padding:9px;border-radius:8px;
+  background:var(--s2);border:1px solid var(--b);
+  color:var(--m);font-size:11px;font-weight:600;
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .2s;
+}
+.sidebar-footer-btn:hover{border-color:var(--purple);color:var(--purple)}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{
+  padding:14px 28px;
+  border-bottom:1px solid var(--b);
+  display:flex;align-items:center;gap:16px;
+  background:rgba(7,7,15,.9);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:40;
+}
+.topbar-title{
+  font-family:var(--font-head);
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-1px;
+}
+.topbar-sub{font-size:11px;color:var(--m);margin-left:2px}
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+
+.pill-stat{
+  display:flex;align-items:center;gap:6px;
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:11px;color:var(--m);
+  font-family:var(--font-mono);
+}
+.pill-stat strong{color:var(--t);font-weight:600}
+
+/* ── CONTENT AREA ── */
+.content{padding:24px 28px;flex:1;overflow-y:auto;max-height:calc(100vh - 65px)}
+
+/* ════════════════════════
+   VIEWS
+════════════════════════ */
+.view{display:none}
+.view.active{display:block}
+
+/* ════════════════════════
+   SECTION / CARD SYSTEM
+════════════════════════ */
+.sec-title{
+  font-family:var(--font-head);
+  font-size:22px;font-weight:800;
+  letter-spacing:-1px;
+  margin-bottom:4px;
+}
+.sec-sub{font-size:12px;color:var(--m);margin-bottom:22px;line-height:1.5}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+.card{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:16px;
+  padding:20px;
+}
+.card-head{
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--m);
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-head::before{
+  content:'';width:3px;height:12px;
+  border-radius:2px;flex-shrink:0;
+}
+.card-head.lime::before{background:linear-gradient(var(--lime),var(--cyan))}
+.card-head.pink::before{background:linear-gradient(var(--pink),var(--orange))}
+.card-head.purple::before{background:linear-gradient(var(--purple),var(--pink))}
+.card-head.gold::before{background:linear-gradient(var(--gold),var(--orange))}
+.card-head.cyan::before{background:linear-gradient(var(--cyan),var(--purple))}
+
+/* ════════════════════════
+   STAT CARDS
+════════════════════════ */
+.stat-card{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:18px 20px;
+  position:relative;
+  overflow:hidden;
+  transition:transform .2s,border-color .2s;
+}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--b2)}
+.stat-card::after{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+}
+.stat-card.lime::after{background:linear-gradient(90deg,var(--lime),var(--cyan))}
+.stat-card.pink::after{background:linear-gradient(90deg,var(--pink),var(--orange))}
+.stat-card.purple::after{background:linear-gradient(90deg,var(--purple),var(--pink))}
+.stat-card.gold::after{background:linear-gradient(90deg,var(--gold),var(--orange))}
+.stat-label{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:8px}
+.stat-value{
+  font-family:var(--font-head);
+  font-size:28px;font-weight:800;
+  letter-spacing:-2px;
+  line-height:1;
+}
+.stat-value.lime{color:var(--lime)}
+.stat-value.pink{color:var(--pink)}
+.stat-value.purple{color:var(--purple)}
+.stat-value.gold{color:var(--gold)}
+.stat-value.cyan{color:var(--cyan)}
+.stat-delta{font-size:11px;color:var(--m);margin-top:6px}
+
+/* ════════════════════════
+   GOAL BAR
+════════════════════════ */
+.goal-bar-wrap{
+  background:var(--s);border:1px solid var(--b);
+  border-radius:14px;padding:18px 22px;
+  margin-bottom:20px;
+}
+.goal-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.goal-bar-label{font-size:13px;font-weight:600;color:var(--t)}
+.goal-bar-meta{font-family:var(--font-mono);font-size:11px;color:var(--cyan)}
+.gbar{height:8px;background:var(--s2);border-radius:4px;overflow:hidden;position:relative}
+.gbar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--lime),var(--cyan),var(--purple));
+  border-radius:4px;
+  width:0%;
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.gbar-fill::after{
+  content:'';
+  position:absolute;right:0;top:0;bottom:0;width:4px;
+  background:rgba(255,255,255,.6);
+  filter:blur(2px);
+  border-radius:2px;
+}
+.goal-bar-ticks{display:flex;justify-content:space-between;margin-top:6px}
+.goal-tick{font-size:9px;color:var(--m2);font-family:var(--font-mono)}
+
+/* ════════════════════════
+   FORM ELEMENTS
+════════════════════════ */
+.ig{display:flex;flex-direction:column;gap:5px}
+.ig label{font-size:10px;color:var(--m);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.ig input,.ig select,.ig textarea{
+  background:var(--bg);
+  border:1px solid var(--b);
+  border-radius:10px;
+  padding:10px 13px;
+  color:var(--t);
+  font-size:13px;
+  font-family:var(--font-body);
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  width:100%;
+}
+.ig input:focus,.ig select:focus,.ig textarea:focus{
+  border-color:var(--lime);
+  box-shadow:0 0 0 3px rgba(181,240,0,.1);
+}
+.ig select option{background:var(--s)}
+.ig textarea{resize:vertical;min-height:80px}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 20px;border-radius:10px;
+  font-size:13px;font-weight:700;
+  font-family:var(--font-body);
+  cursor:pointer;border:none;
+  transition:all .2s;
+  white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  color:#07070f;
+  box-shadow:0 0 20px rgba(181,240,0,.2);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(181,240,0,.35)}
+.btn-danger{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff}
+.btn-danger:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,45,120,.3)}
+.btn-ghost{
+  background:var(--s2);border:1px solid var(--b);
+  color:var(--m);
+  transition:all .2s;
+}
+.btn-ghost:hover{border-color:var(--lime);color:var(--lime)}
+.btn-purple{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff}
+.btn-purple:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(139,92,246,.3)}
+.btn-sm{padding:6px 13px;font-size:11px;border-radius:8px}
+
+/* ════════════════════════
+   SCANNER VIEW
+════════════════════════ */
+.scan-grid{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end}
+.area-tags-wrap{margin-top:16px}
+.area-tags-label{font-size:9px;font-weight:700;color:var(--m2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.area-tags{display:flex;flex-wrap:wrap;gap:6px}
+.area-tag{
+  padding:4px 11px;border-radius:6px;
+  font-size:10px;font-weight:700;
+  background:rgba(181,240,0,.07);
+  border:1px solid rgba(181,240,0,.15);
+  color:rgba(181,240,0,.7);
+  cursor:pointer;
+  transition:all .15s;
+  font-family:var(--font-mono);
+}
+.area-tag:hover,.area-tag.sel{
+  background:rgba(181,240,0,.15);
+  border-color:var(--lime);
+  color:var(--lime);
+}
+
+.scan-tip{
+  background:linear-gradient(135deg,rgba(181,240,0,.05),rgba(0,245,212,.05));
+  border:1px solid rgba(181,240,0,.1);
+  border-radius:12px;
+  padding:14px 16px;
+  font-size:11px;
+  color:var(--m);
+  line-height:1.7;
+  margin-top:14px;
+}
+.scan-tip strong{color:var(--lime)}
+
+/* ── PRIORITY BADGE ── */
+.prio{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.prio-a{background:rgba(181,240,0,.15);color:var(--lime)}
+.prio-b{background:rgba(0,245,212,.15);color:var(--cyan)}
+.prio-c{background:rgba(107,123,170,.1);color:var(--m)}
+
+/* ═══════════════════════
+   QUALIFIER / SCORER
+═══════════════════════ */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sc-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  border:1px solid var(--b);
+  background:var(--bg);
+  cursor:pointer;
+  transition:all .15s;
+  user-select:none;
+}
+.sc-item:hover{border-color:var(--b2)}
+.sc-item.checked{border-color:rgba(181,240,0,.35);background:rgba(181,240,0,.05)}
+.sc-box{
+  width:18px;height:18px;
+  border:2px solid var(--b2);
+  border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+  flex-shrink:0;
+  transition:all .15s;
+}
+.sc-item.checked .sc-box{background:var(--lime);border-color:var(--lime);color:#07070f}
+.sc-label{font-size:11px;color:var(--m);flex:1;line-height:1.4}
+.sc-pts{
+  font-size:10px;font-weight:700;
+  color:var(--cyan);
+  font-family:var(--font-mono);
+  white-space:nowrap;
+}
+
+.score-result{
+  margin-top:16px;border-radius:14px;padding:20px;text-align:center;
+  display:none;
+  transition:all .3s;
+}
+.score-result.hot{background:rgba(181,240,0,.07);border:1px solid rgba(181,240,0,.2)}
+.score-result.warm{background:rgba(255,209,102,.07);border:1px solid rgba(255,209,102,.2)}
+.score-result.cold{background:rgba(255,45,120,.05);border:1px solid rgba(255,45,120,.15)}
+.score-num{
+  font-family:var(--font-head);
+  font-size:42px;font-weight:800;
+  letter-spacing:-3px;
+  margin-bottom:4px;
+}
+.score-num.hot{color:var(--lime)}
+.score-num.warm{color:var(--gold)}
+.score-num.cold{color:var(--pink)}
+.score-verdict{font-size:14px;font-weight:700;margin-bottom:4px}
+.score-action{font-size:11px;color:var(--m)}
+
+/* ═══════════════════════
+   LEAD CARDS (Pipeline view)
+═══════════════════════ */
+.leads-toolbar{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;flex-wrap:wrap;
+}
+.filter-tabs{display:flex;gap:5px;flex-wrap:wrap}
+.ftab{
+  padding:6px 13px;border-radius:8px;
+  font-size:11px;font-weight:600;
+  cursor:pointer;
+  border:1px solid var(--b);
+  background:var(--s2);
+  color:var(--m);
+  transition:all .2s;
+  font-family:var(--font-body);
+}
+.ftab.active,.ftab:hover{
+  background:rgba(181,240,0,.1);
+  border-color:rgba(181,240,0,.3);
+  color:var(--lime);
+}
+
+.leads-grid{display:grid;gap:8px}
+.lcard{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:14px 18px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:14px;
+  align-items:center;
+  transition:all .2s;
+  border-left-width:3px;
+  cursor:pointer;
+}
+.lcard:hover{border-top-color:var(--b2);border-right-color:var(--b2);border-bottom-color:var(--b2);transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.lcard.no-site{border-left-color:var(--lime)}
+.lcard.has-site{border-left-color:var(--m2);opacity:.5}
+.lcard.unknown-site{border-left-color:var(--gold)}
+
+.lcard-icon{
+  width:40px;height:40px;
+  background:var(--s2);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.lcard-name{
+  font-family:var(--font-head);
+  font-size:14px;font-weight:700;
+  margin-bottom:4px;
+  letter-spacing:-.3px;
+}
+.lcard-meta{
+  display:flex;gap:8px;flex-wrap:wrap;
+  font-size:11px;color:var(--m);
+}
+.lcard-meta span{display:flex;align-items:center;gap:3px}
+
+.lcard-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.status-pill{
+  padding:3px 9px;border-radius:20px;
+  font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+  white-space:nowrap;
+}
+.status-pill.hot{background:rgba(181,240,0,.15);color:var(--lime)}
+.status-pill.check{background:rgba(255,209,102,.15);color:var(--gold)}
+.status-pill.cold{background:rgba(107,123,170,.1);color:var(--m)}
+.lcard-actions{display:flex;gap:5px}
+.la{
+  background:var(--s2);border:1px solid var(--b);
+  border-radius:7px;padding:4px 9px;
+  font-size:10px;font-weight:600;
+  cursor:pointer;
+  color:var(--t);
+  transition:all .15s;
+  display:flex;align-items:center;gap:3px;
+  text-decoration:none;
+}
+.la:hover{border-color:var(--lime);color:var(--lime)}
+.la.del:hover{border-color:var(--pink);color:var(--pink)}
+
+/* SCORE BADGE */
+.score-badge{
+  font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:4px;
+  font-family:var(--font-mono);
+}
+.score-badge.hot{background:rgba(181,240,0,.15);color:var(--lime)}
+.score-badge.warm{background:rgba(255,209,102,.12);color:var(--gold)}
+.score-badge.cold{background:rgba(255,45,120,.1);color:var(--pink)}
+
+/* empty state */
+.empty{text-align:center;padding:60px 20px;color:var(--m)}
+.empty-icon{font-size:48px;margin-bottom:14px;display:block;
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.empty h3{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--t);margin-bottom:8px}
+.empty p{font-size:12px;line-height:1.7;max-width:360px;margin:0 auto}
+
+/* ═══════════════════════
+   KANBAN BOARD
+═══════════════════════ */
+.kanban{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(220px,1fr));
+  gap:14px;
+  overflow-x:auto;
+  padding-bottom:20px;
+}
+.k-col{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:14px;
+  padding:14px;
+  min-height:400px;
+}
+.k-col-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--b);
+}
+.k-col-title{
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.k-count{
+  font-family:var(--font-mono);
+  font-size:10px;
+  background:var(--bg);
+  border:1px solid var(--b);
+  border-radius:4px;
+  padding:2px 6px;
+  color:var(--m);
+}
+.k-col.stage-0 .k-col-title{color:#a78bfa}
+.k-col.stage-1 .k-col-title{color:var(--cyan)}
+.k-col.stage-2 .k-col-title{color:var(--orange)}
+.k-col.stage-3 .k-col-title{color:var(--gold)}
+.k-col.stage-4 .k-col-title{color:var(--lime)}
+
+.k-card{
+  background:var(--bg);
+  border:1px solid var(--b);
+  border-radius:10px;
+  padding:11px 13px;
+  margin-bottom:8px;
+  cursor:grab;
+  transition:all .2s;
+  border-left:3px solid transparent;
+}
+.k-card:hover{border-top-color:var(--b2);border-right-color:var(--b2);border-bottom-color:var(--b2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.k-card.stage-0{border-left-color:#a78bfa}
+.k-card.stage-1{border-left-color:var(--cyan)}
+.k-card.stage-2{border-left-color:var(--orange)}
+.k-card.stage-3{border-left-color:var(--gold)}
+.k-card.stage-4{border-left-color:var(--lime)}
+.k-card.dragging{opacity:.4;transform:rotate(2deg)}
+.k-col.drag-over{background:var(--s2);border-color:var(--lime)}
+
+.k-card-name{font-size:12px;font-weight:700;margin-bottom:5px;font-family:var(--font-head)}
+.k-card-meta{font-size:10px;color:var(--m)}
+.k-card-actions{display:flex;gap:4px;margin-top:8px}
+.k-btn{
+  font-size:9px;font-weight:600;
+  padding:3px 8px;border-radius:5px;
+  border:1px solid var(--b2);
+  background:var(--s);
+  color:var(--m);
+  cursor:pointer;font-family:inherit;
+  transition:all .15s;
+}
+.k-btn:hover{border-color:var(--lime);color:var(--lime)}
+.k-btn.del:hover{border-color:var(--pink);color:var(--pink)}
+
+/* ═══════════════════════
+   ANALYTICS VIEW
+═══════════════════════ */
+.chart-card{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:16px;
+  padding:22px;
+}
+.chart-title{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:16px}
+canvas{max-width:100%}
+
+/* ═══════════════════════
+   AI PITCH MODAL
+═══════════════════════ */
+.overlay{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(7,7,15,.85);
+  backdrop-filter:blur(10px);
+  z-index:200;
+  align-items:center;justify-content:center;
+  padding:20px;
+}
+.overlay.open{display:flex}
+.modal{
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:20px;
+  padding:28px;
+  max-width:560px;width:100%;
+  max-height:88vh;overflow-y:auto;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+  position:relative;
+}
+.modal-close{
+  position:absolute;top:20px;right:20px;
+  background:var(--s2);border:1px solid var(--b);
+  border-radius:8px;padding:4px 10px;
+  color:var(--m);cursor:pointer;
+  font-size:11px;font-family:inherit;
+  transition:all .2s;
+}
+.modal-close:hover{border-color:var(--pink);color:var(--pink)}
+.modal-title{
+  font-family:var(--font-head);
+  font-size:18px;font-weight:800;
+  letter-spacing:-.5px;
+  margin-bottom:4px;
+}
+.modal-sub{font-size:11px;color:var(--m);margin-bottom:18px}
+
+.pitch-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.ptab{
+  padding:6px 13px;border-radius:7px;
+  font-size:11px;font-weight:600;
+  cursor:pointer;border:1px solid var(--b);
+  background:var(--bg);color:var(--m);
+  font-family:inherit;transition:all .2s;
+}
+.ptab.active{background:rgba(181,240,0,.1);border-color:rgba(181,240,0,.3);color:var(--lime)}
+
+.pitch-text{
+  background:var(--bg);
+  border:1px solid var(--b);
+  border-radius:12px;
+  padding:16px;
+  font-size:12px;line-height:1.9;
+  color:#d1d5db;
+  white-space:pre-wrap;
+  font-family:var(--font-body);
+  max-height:300px;overflow-y:auto;
+  margin-bottom:12px;
+}
+
+.ai-status{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:10px;
+  background:rgba(139,92,246,.08);
+  border:1px solid rgba(139,92,246,.15);
+  font-size:11px;color:var(--m);
+  margin-bottom:12px;
+}
+.ai-dot{width:7px;height:7px;background:var(--purple);border-radius:50%;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.ai-thinking .ai-dot{background:var(--orange)}
+.ai-done .ai-dot{background:var(--lime);animation:none}
+.ai-error .ai-dot{background:var(--pink);animation:none}
+
+.copy-btn{
+  width:100%;padding:11px;border-radius:10px;
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  color:#07070f;font-size:13px;font-weight:700;
+  border:none;cursor:pointer;font-family:inherit;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.copy-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(181,240,0,.25)}
+
+/* ═══════════════════════
+   ADD LEAD MODAL
+═══════════════════════ */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.span-2{grid-column:span 2}
+
+/* ═══════════════════════
+   SETTINGS VIEW
+═══════════════════════ */
+.settings-section{margin-bottom:24px}
+.settings-title{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:10px;color:var(--t)}
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+  background:var(--s);
+  border:1px solid var(--b);
+  border-radius:10px;
+  margin-bottom:8px;
+}
+.settings-row-info{font-size:12px;color:var(--m)}
+.settings-row-label{font-size:13px;font-weight:600;color:var(--t);margin-bottom:2px}
+.settings-input{
+  background:var(--bg);border:1px solid var(--b);
+  border-radius:8px;padding:8px 12px;
+  color:var(--t);font-size:12px;
+  font-family:var(--font-mono);
+  outline:none;width:280px;
+  transition:border-color .2s;
+}
+.settings-input:focus{border-color:var(--purple)}
+.settings-token-status{font-size:10px;font-family:var(--font-mono);margin-top:4px}
+.settings-token-status.ok{color:var(--lime)}
+.settings-token-status.err{color:var(--pink)}
+
+/* ═══════════════════════
+   RESPONSIVE
+═══════════════════════ */
+@media(max-width:900px){
+  .sidebar{width:60px;overflow:hidden}
+  .sidebar-logo .logo-text,.sidebar-logo .logo-sub,.nav-item span:not(.ni),.nav-badge,.city-btn span:not(.city-dot),.sidebar-footer-btn span,.sidebar-cities .nav-label,.nav-section .nav-label{display:none}
+  .nav-item{justify-content:center;padding:12px}
+  .city-btn{justify-content:center;padding:8px}
+  .sidebar-footer-btn{justify-content:center}
+  .topbar-title,.topbar-sub,.pill-stat{display:none}
+  .content{padding:16px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}
+  .scan-grid{grid-template-columns:1fr}
+  .score-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .span-2{grid-column:span 1}
+  .kanban{grid-template-columns:repeat(5,240px)}
+}
+@media(max-width:600px){
+  .sidebar{display:none}
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .lcard-right{display:none}
+  .lcard{grid-template-columns:auto 1fr}
+}
+
+/* ═══════════════════════
+   ANIMATIONS
+═══════════════════════ */
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.shine{
+  position:relative;
+  overflow:hidden;
+}
+.shine::after{
+  content:'';
+  position:absolute;
+  top:-50%;left:-100%;
+  width:60%;height:200%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);
+  animation:shine 4s ease-in-out infinite;
+}
+@keyframes shine{0%,100%{left:-100%}60%{left:130%}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--m2)}
+
+/* MAP EMBED */
+.map-frame{
+  width:100%;height:480px;
+  border:none;border-radius:12px;
+  background:var(--s2);
+  position:relative;
+}
+.map-container{position:relative}
+.map-overlay{
+  position:absolute;top:12px;right:12px;
+  background:var(--s);border:1px solid var(--b);
+  border-radius:12px;padding:14px;
+  z-index:10;width:240px;
+}
+.map-overlay-title{font-size:11px;font-weight:700;color:var(--t);margin-bottom:10px}
+.map-search-btn{
+  width:100%;padding:9px;border-radius:8px;
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  color:#07070f;font-size:12px;font-weight:700;
+  border:none;cursor:pointer;font-family:inherit;
+  margin-top:8px;
+}
+
+/* TAG highlight */
+.highlight-text{
+  background:linear-gradient(135deg,var(--lime),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+</style>
+</head>
+<body>
+
+<!-- ambient orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="app">
+<!-- ════════════ SIDEBAR ════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-lockup">
+      <div class="logo-mark">🎯</div>
+      <div>
+        <div class="logo-text">LeadHunter</div>
+        <div class="logo-sub">Pro · NG Edition</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)">
+      <span class="ni">📊</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="nav('scanner',this)">
+      <span class="ni">🔍</span><span>Scanner</span>
+    </div>
+    <div class="nav-item" onclick="nav('qualifier',this)">
+      <span class="ni">🎯</span><span>Qualifier</span>
+    </div>
+    <div class="nav-item" onclick="nav('map',this)">
+      <span class="ni">🗺️</span><span>Map Hunt</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Pipeline</div>
+    <div class="nav-item" onclick="nav('leads',this)">
+      <span class="ni">📋</span><span>All Leads</span>
+      <span class="nav-badge" id="navBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('kanban',this)">
+      <span class="ni">🗂️</span><span>Kanban Board</span>
+    </div>
+    <div class="nav-item" onclick="nav('analytics',this)">
+      <span class="ni">📈</span><span>Analytics</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Cities</div>
+  </div>
+  <div class="sidebar-cities">
+    <div class="city-btn active" onclick="setCity('lagos',this)">
+      <div class="city-dot" style="background:var(--lime)"></div>
+      <span>🌊 Lagos</span>
+    </div>
+    <div class="city-btn" onclick="setCity('abuja',this)">
+      <div class="city-dot" style="background:var(--purple)"></div>
+      <span>🏛️ Abuja</span>
+    </div>
+    <div class="city-btn" onclick="setCity('ph',this)">
+      <div class="city-dot" style="background:var(--cyan)"></div>
+      <span>⚓ Port Harcourt</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="sidebar-footer-btn" onclick="nav('settings',document.querySelector('.nav-item[onclick*=settings]')||this)">
+      ⚙️ <span>Settings & API Key</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ════════════ MAIN ════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topTitle">Dashboard</div>
+      <div class="topbar-sub" id="topSub">Monthly overview · ₦1M goal tracker</div>
+    </div>
+    <div class="topbar-right">
+      <div class="pill-stat">Leads: <strong id="hLeads">0</strong></div>
+      <div class="pill-stat">Hot: <strong id="hHot" style="color:var(--lime)">0</strong></div>
+      <div class="pill-stat">Closed: <strong id="hClosed" style="color:var(--gold)">0</strong></div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Lead</button>
+    </div>
+  </div>
+
+  <div class="content" id="mainContent">
+
+    <!-- ══════ DASHBOARD ══════ -->
+    <div class="view active" id="view-dashboard">
+      <div class="sec-title">Good day! 👋 Let's <span class="highlight-text">close deals.</span></div>
+      <div class="sec-sub">Track your 40-pitch monthly goal, manage leads, and hit ₦1,000,000.</div>
+
+      <!-- GOAL BAR -->
+      <div class="goal-bar-wrap shine">
+        <div class="goal-bar-top">
+          <span class="goal-bar-label">🚀 Monthly Goal: 40 pitches → 4 closes → ₦1,000,000</span>
+          <span class="goal-bar-meta" id="gMeta">₦0 · 0/40 pitched</span>
+        </div>
+        <div class="gbar"><div class="gbar-fill" id="gFill"></div></div>
+        <div class="goal-bar-ticks">
+          <span class="goal-tick">₦0</span>
+          <span class="goal-tick">₦250k</span>
+          <span class="goal-tick">₦500k</span>
+          <span class="goal-tick">₦750k</span>
+          <span class="goal-tick">₦1M 🎯</span>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="stat-card lime">
+          <div class="stat-label">🔥 Hot Leads</div>
+          <div class="stat-value lime" id="dHot">0</div>
+          <div class="stat-delta">No website found</div>
+        </div>
+        <div class="stat-card pink">
+          <div class="stat-label">📱 Pitched</div>
+          <div class="stat-value pink" id="dPitched">0</div>
+          <div class="stat-delta">of 40 this month</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">🤝 Closed</div>
+          <div class="stat-value purple" id="dClosed">0</div>
+          <div class="stat-delta" id="dRate">0% close rate</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">💰 Revenue</div>
+          <div class="stat-value gold" id="dRev">₦0</div>
+          <div class="stat-delta" id="dRem">₦1M remaining</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px">
+        <!-- QUICK ACTIONS -->
+        <div class="card">
+          <div class="card-head lime">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary" style="width:100%" onclick="openAddModal()">➕ Add New Lead</button>
+            <button class="btn btn-purple" style="width:100%" onclick="addClosed()">✅ Mark Client Closed (+₦250k)</button>
+            <button class="btn btn-ghost" style="width:100%" onclick="exportCSV()">📥 Export Pipeline CSV</button>
+            <button class="btn btn-ghost" style="width:100%" onclick="resetMonth()">🔄 Reset Month</button>
+          </div>
+        </div>
+        <!-- BEST TARGETS -->
+        <div class="card">
+          <div class="card-head pink">🏆 Top Categories This Week</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px">
+              <span style="font-size:12px">🏨 Hotels & Shortlets</span>
+              <span class="prio prio-a">⭐⭐⭐ Top</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px">
+              <span style="font-size:12px">🎉 Event Centers</span>
+              <span class="prio prio-a">⭐⭐⭐ Top</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px">
+              <span style="font-size:12px">🏥 Private Clinics</span>
+              <span class="prio prio-a">⭐⭐⭐ Top</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px">
+              <span style="font-size:12px">🏫 Private Schools</span>
+              <span class="prio prio-b">⭐⭐⭐ Top</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg);border-radius:8px">
+              <span style="font-size:12px">🚚 Logistics Firms</span>
+              <span class="prio prio-b">⭐⭐⭐ Top</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT LEADS (dashboard preview) -->
+      <div class="card">
+        <div class="card-head cyan" style="justify-content:space-between">
+          <span>Recent Leads</span>
+          <button class="btn btn-ghost btn-sm" onclick="nav('leads',document.querySelector('.nav-item[onclick*=leads]'))">View All →</button>
+        </div>
+        <div id="dashRecentLeads"></div>
+      </div>
+    </div>
+
+    <!-- ══════ SCANNER ══════ -->
+    <div class="view" id="view-scanner">
+      <div class="sec-title">🔍 Google Maps <span class="highlight-text">Scanner</span></div>
+      <div class="sec-sub">Pick a category and area, then scan Maps. Open in a new tab and log your finds here.</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head lime">Scan Controls</div>
+        <div class="scan-grid" id="scanGrid">
+          <div class="ig">
+            <label>Business Category</label>
+            <select id="cat">
+              <option value="hotels near">🏨 Hotels &amp; Shortlets ⭐⭐⭐</option>
+              <option value="event centers near">🎉 Event Centers ⭐⭐⭐</option>
+              <option value="private clinics near">🏥 Clinics &amp; Dentists ⭐⭐⭐</option>
+              <option value="private schools near">🏫 Private Schools ⭐⭐⭐</option>
+              <option value="interior decorators near">🛋️ Interior Decorators ⭐⭐⭐</option>
+              <option value="logistics companies near">🚚 Logistics Companies ⭐⭐⭐</option>
+              <option value="restaurants near">🍽️ Restaurants ⭐⭐</option>
+              <option value="hair salons near">💇 Salons &amp; Barbers ⭐⭐</option>
+              <option value="fashion boutiques near">👗 Fashion Boutiques ⭐⭐</option>
+              <option value="gyms near">🏋️ Gyms &amp; Fitness ⭐⭐</option>
+              <option value="caterers near">🍱 Caterers &amp; Event Food ⭐⭐</option>
+              <option value="auto car dealers near">🚗 Car Dealers ⭐⭐</option>
+              <option value="pharmacies near">💊 Pharmacies</option>
+              <option value="supermarkets near">🛒 Supermarkets</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label>Neighbourhood</label>
+            <input type="text" id="loc" placeholder="Click tag or type area..." />
+          </div>
+          <div class="ig">
+            <label>City</label>
+            <select id="citySelect" onchange="syncCitySelect()">
+              <option value="lagos">🌊 Lagos</option>
+              <option value="abuja">🏛️ Abuja</option>
+              <option value="ph">⚓ Port Harcourt</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="runScan()" style="height:42px">🚀 Scan Maps</button>
+        </div>
+        <div class="area-tags-wrap">
+          <div class="area-tags-label">📍 Target Neighbourhoods — click to select</div>
+          <div class="area-tags" id="areaTags"></div>
+        </div>
+        <div class="scan-tip" style="margin-top:14px">
+          <strong>⭐⭐⭐ Tier 1</strong> — Customers Google these before visiting. Build demo first. <br>
+          <strong>⭐⭐ Tier 2</strong> — Visual businesses that benefit strongly from a website.<br>
+          <strong>Tier 3</strong> — Pitch only if qualifier score is 8+ out of 11.
+        </div>
+      </div>
+
+      <!-- WHAT TO LOOK FOR / SKIP -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head lime">✅ Build Demo For These</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">⭐ Has 10+ Google reviews — they care about reputation</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">📸 Owner uploaded photos to their Maps profile</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">📍 Located in a target high-income neighbourhood</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">🏢 Has a proper physical premises</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">📱 Active on Instagram or Facebook</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">📞 Phone number listed on Google Maps</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">🌐 Zero website anywhere — Maps, FB, everywhere</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head pink">❌ Skip These Businesses</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">0 reviews, 0 photos — owner doesn't care online</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">Pure roadside / open-market (no fixed address)</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">Very low-income area (₦250k is unreachable)</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">No phone number listed anywhere</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">Already has a decent website (even basic)</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">Profile appears permanently closed</div>
+            <div style="font-size:11px;color:#94a3b8;line-height:1.6">One-person mobile operation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ QUALIFIER ══════ -->
+    <div class="view" id="view-qualifier">
+      <div class="sec-title">🎯 Lead <span class="highlight-text">Qualifier</span></div>
+      <div class="sec-sub">Score every business before building a demo. 8+ = build. Under 5 = skip.</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head lime">Score Signals</div>
+          <div class="score-grid" id="scoreChecks"></div>
+          <div class="score-result" id="scoreResult">
+            <div class="score-num" id="scoreNum">0</div>
+            <div class="score-verdict" id="scoreVerdict"></div>
+            <div class="score-action" id="scoreAction"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="resetScore()">🔄 Reset</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddModal()">➕ Add This Lead</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head gold">🏆 Best Targets by City</div>
+          <div style="font-size:11px;font-weight:700;color:var(--lime);margin-bottom:8px">Lagos</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+            <div style="font-size:11px;color:#94a3b8">🏨 Shortlet operators — Lekki / VI / Ikoyi</div>
+            <div style="font-size:11px;color:#94a3b8">🎉 Event halls — Ikeja, Surulere, Lekki</div>
+            <div style="font-size:11px;color:#94a3b8">🏥 Private clinics — GRA / Victoria Island</div>
+            <div style="font-size:11px;color:#94a3b8">🏫 Private schools — Lekki, Magodo</div>
+            <div style="font-size:11px;color:#94a3b8">🚚 Logistics — Ikeja, Trade Fair area</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px">Abuja</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+            <div style="font-size:11px;color:#94a3b8">🏨 Hotels — Wuse 2, Maitama</div>
+            <div style="font-size:11px;color:#94a3b8">🏥 Specialist clinics — Garki, Asokoro</div>
+            <div style="font-size:11px;color:#94a3b8">🎉 Event centers — Jabi, Gwarinpa</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:8px">Port Harcourt</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="font-size:11px;color:#94a3b8">🚚 Oil services — Trans-Amadi</div>
+            <div style="font-size:11px;color:#94a3b8">🏨 Hotels — GRA Phase 1 &amp; 2</div>
+            <div style="font-size:11px;color:#94a3b8">🏥 Clinics — Peter Odili Rd</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ MAP HUNT ══════ -->
+    <div class="view" id="view-map">
+      <div class="sec-title">🗺️ Map <span class="highlight-text">Hunt</span></div>
+      <div class="sec-sub">Open Google Maps directly scoped to your target area and category.</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head lime">Launch Map Search</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end">
+          <div class="ig">
+            <label>Category</label>
+            <select id="mapCat">
+              <option value="hotels">Hotels &amp; Shortlets</option>
+              <option value="event centers">Event Centers</option>
+              <option value="private clinics">Private Clinics</option>
+              <option value="private schools">Private Schools</option>
+              <option value="logistics companies">Logistics Companies</option>
+              <option value="interior decorators">Interior Decorators</option>
+              <option value="restaurants">Restaurants</option>
+              <option value="salons">Hair Salons &amp; Barbers</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label>Area</label>
+            <input id="mapArea" placeholder="e.g. Lekki Phase 1" />
+          </div>
+          <div class="ig">
+            <label>City</label>
+            <select id="mapCity">
+              <option value="Lagos">Lagos</option>
+              <option value="Abuja">Abuja</option>
+              <option value="Port Harcourt">Port Harcourt</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="launchMap()" style="height:42px">🗺️ Open Maps</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head cyan">📱 Google Maps is your hunting ground</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div style="background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:28px;margin-bottom:8px">🔍</div>
+            <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Step 1: Search</div>
+            <div style="font-size:11px;color:var(--m)">Use the launcher above to open Maps pre-scoped to your category &amp; area</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:28px;margin-bottom:8px">👀</div>
+            <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Step 2: Check</div>
+            <div style="font-size:11px;color:var(--m)">Click each business. Is "Website" button missing? That's your target.</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:28px;margin-bottom:8px">📋</div>
+            <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Step 3: Score &amp; Log</div>
+            <div style="font-size:11px;color:var(--m)">Run them through the Qualifier, then add strong ones to your Pipeline.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ LEADS LIST ══════ -->
+    <div class="view" id="view-leads">
+      <div class="sec-title">📋 Lead <span class="highlight-text">Pipeline</span></div>
+      <div class="sec-sub" id="leadsSub">All tracked businesses across Lagos, Abuja &amp; Port Harcourt</div>
+      <div class="leads-toolbar">
+        <div class="filter-tabs" id="filterTabs">
+          <div class="ftab active" onclick="flt('all',this)">All</div>
+          <div class="ftab" onclick="flt('no-site',this)">🔥 Hot Leads</div>
+          <div class="ftab" onclick="flt('unknown-site',this)">⚠️ Needs Check</div>
+          <div class="ftab" onclick="flt('has-site',this)">✅ Has Site</div>
+          <div class="ftab" onclick="flt('lagos',this)">🌊 Lagos</div>
+          <div class="ftab" onclick="flt('abuja',this)">🏛️ Abuja</div>
+          <div class="ftab" onclick="flt('ph',this)">⚓ PH</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:7px">
+          <button class="btn btn-ghost btn-sm" onclick="sortLeads()">↕ Sort by Score</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Lead</button>
+        </div>
+      </div>
+      <div class="leads-grid" id="leadsGrid"></div>
+    </div>
+
+    <!-- ══════ KANBAN ══════ -->
+    <div class="view" id="view-kanban">
+      <div class="sec-title">🗂️ Kanban <span class="highlight-text">Board</span></div>
+      <div class="sec-sub">Drag leads through your sales pipeline. Double-click any card to move it.</div>
+      <div class="kanban" id="kanbanBoard"></div>
+    </div>
+
+    <!-- ══════ ANALYTICS ══════ -->
+    <div class="view" id="view-analytics">
+      <div class="sec-title">📈 <span class="highlight-text">Analytics</span></div>
+      <div class="sec-sub">Visual breakdown of your pipeline performance and revenue progress.</div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="chart-card">
+          <div class="chart-title">Lead Status Breakdown</div>
+          <canvas id="statusChart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Leads by City</div>
+          <canvas id="cityChart" height="220"></canvas>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-title">Revenue Progress</div>
+          <canvas id="revenueChart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Leads by Category</div>
+          <canvas id="catChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ SETTINGS ══════ -->
+    <div class="view" id="view-settings">
+      <div class="sec-title">⚙️ <span class="highlight-text">Settings</span></div>
+      <div class="sec-sub">Configure your API key, data sync, and preferences.</div>
+
+      <div class="settings-section">
+        <div class="settings-title">🤖 Claude AI — Pitch Generator</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Anthropic API Key</div>
+            <div class="settings-row-info">Used to generate AI-powered pitch scripts with Claude. Never stored on any server.</div>
+            <div class="settings-token-status" id="apiKeyStatus">No key saved</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+          <input class="settings-input" type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+          <button class="btn btn-primary btn-sm" onclick="saveApiKey()">Save Key</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearApiKey()">Clear</button>
+        </div>
+        <div style="font-size:10px;color:var(--m);margin-top:8px">⚠️ Key is stored only in your browser's localStorage. Never shared.</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">💾 Data Storage</div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <div>
+            <div class="settings-row-label">Current mode: Browser localStorage</div>
+            <div class="settings-row-info">All leads saved to your browser. Export CSV to back up, or import to restore.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="exportData()">📤 Export JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="importData()">📥 Import JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📊 Export CSV</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑️ Clear All Data</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">🎯 Goals</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div class="ig">
+            <label>Monthly Revenue Target (₦)</label>
+            <input type="number" id="setGoal" value="1000000" />
+          </div>
+          <div class="ig">
+            <label>Monthly Pitch Target</label>
+            <input type="number" id="setPitchTarget" value="40" />
+          </div>
+          <div class="ig">
+            <label>Price per Client (₦)</label>
+            <input type="number" id="setRate" value="250000" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveGoals()">Save Goals</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<!-- ═══════════ PITCH MODAL ═══════════ -->
+<div class="overlay" id="pitchModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('pitchModal')">✕ Close</button>
+    <div class="modal-title">📱 Pitch Script</div>
+    <div class="modal-sub" id="pitchBizName">for Business Name</div>
+    <div class="ai-status" id="aiStatus" style="display:none">
+      <div class="ai-dot"></div>
+      <span id="aiStatusText">Generating AI pitch with Claude...</span>
+    </div>
+    <div class="pitch-tabs" id="pitchTabs">
+      <button class="ptab active" onclick="showPitch('wa',this)">💬 WhatsApp</button>
+      <button class="ptab" onclick="showPitch('call',this)">📞 Call Script</button>
+      <button class="ptab" onclick="showPitch('email',this)">📧 Email</button>
+      <button class="ptab" onclick="showPitch('inperson',this)">🤝 In-Person</button>
+      <button class="ptab" onclick="showPitch('ai',this)" style="border-color:rgba(139,92,246,.3);color:var(--purple)">✨ AI Custom</button>
+    </div>
+    <div class="pitch-text" id="pitchText">Select a pitch type above...</div>
+    <button class="copy-btn" onclick="copyPitch()">📋 Copy Script</button>
+  </div>
+</div>
+
+<!-- ═══════════ ADD LEAD MODAL ═══════════ -->
+<div class="overlay" id="addModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addModal')">✕ Close</button>
+    <div class="modal-title">➕ Add Lead to Pipeline</div>
+    <div class="modal-sub">Qualify first, then log strong leads here.</div>
+    <div class="form-grid">
+      <div class="ig span-2">
+        <label>Business Name *</label>
+        <input id="aN" placeholder="e.g. Golden Gate Hotel" />
+      </div>
+      <div class="ig">
+        <label>Category</label>
+        <input id="aC" placeholder="Hotel, Clinic, Event Center..." />
+      </div>
+      <div class="ig">
+        <label>City</label>
+        <select id="aCi">
+          <option value="lagos">🌊 Lagos</option>
+          <option value="abuja">🏛️ Abuja</option>
+          <option value="ph">⚓ Port Harcourt</option>
+        </select>
+      </div>
+      <div class="ig">
+        <label>Neighbourhood</label>
+        <input id="aL" placeholder="e.g. Lekki Phase 1" />
+      </div>
+      <div class="ig">
+        <label>Phone Number</label>
+        <input id="aPh" placeholder="08012345678" />
+      </div>
+      <div class="ig">
+        <label>Qualifier Score (0–11)</label>
+        <input id="aSc" type="number" min="0" max="11" placeholder="e.g. 9" />
+      </div>
+      <div class="ig">
+        <label>Website Status</label>
+        <select id="aSt">
+          <option value="no-site">🔥 No Website (Hot Lead)</option>
+          <option value="unknown-site">⚠️ Needs Checking</option>
+          <option value="has-site">✅ Already Has Website</option>
+        </select>
+      </div>
+      <div class="ig">
+        <label>Pipeline Stage</label>
+        <select id="aStage">
+          <option value="0">🔎 Prospecting</option>
+          <option value="1">🏗️ Demo Ready</option>
+          <option value="2">📱 Pitched</option>
+          <option value="3">🔥 Hot (Responding)</option>
+          <option value="4">💰 Closed Won</option>
+        </select>
+      </div>
+      <div class="ig span-2">
+        <label>Notes</label>
+        <textarea id="aNote" placeholder="Any extra details about this lead..."></textarea>
+      </div>
+    </div>
+    <button class="copy-btn" style="margin-top:14px" onclick="addLead()">Add to Pipeline ✓</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   DATA LAYER
+════════════════════════════════════ */
+var leads = JSON.parse(localStorage.getItem('lhp_leads') || '[]');
+var stats = JSON.parse(localStorage.getItem('lhp_stats') || '{"closed":0,"pitched":0}');
+var goals = JSON.parse(localStorage.getItem('lhp_goals') || '{"revenue":1000000,"pitches":40,"rate":250000}');
+var apiKey = localStorage.getItem('lhp_apikey') || '';
+
+var currentCity = 'lagos';
+var currentFilter = 'all';
+var sortByScore = false;
+var activePitchLead = null;
+var currentPitchType = 'wa';
+var chartInstances = {};
+
+// Kanban stages
+var STAGES = ['Prospecting','Demo Ready','Pitched','Hot (Responding)','Closed Won'];
+var STAGE_COLORS = ['#a78bfa','#00f5d4','#ff7c1f','#ffd166','#b5f000'];
+
+/* ════════════════════════════════════
+   PERSISTENCE
+════════════════════════════════════ */
+function save() {
+  localStorage.setItem('lhp_leads', JSON.stringify(leads));
+  localStorage.setItem('lhp_stats', JSON.stringify(stats));
+  localStorage.setItem('lhp_goals', JSON.stringify(goals));
+}
+
+/* ════════════════════════════════════
+   CITY DATA
+════════════════════════════════════ */
+var CITIES = {
+  lagos: {
+    areas: ['Lekki Ph 1','Lekki Ph 2','Victoria Island','Ikoyi','Ikeja GRA','Magodo','Surulere','Ajah','Maryland','Yaba','Lagos Island','Gbagada','Ojodu','Festac','Sangotedo']
+  },
+  abuja: {
+    areas: ['Wuse 2','Maitama','Garki','Jabi','Gwarinpa','Utako','Asokoro','Lugbe','Kado','Life Camp','CBD','Kubwa','Apo','Karu']
+  },
+  ph: {
+    areas: ['GRA Phase 1','GRA Phase 2','Trans-Amadi','Peter Odili Rd','Rumuola','Eliozu','Woji','D-Line','Rumuigbo','Rumuokoro','Oyigbo','Aba Road']
+  }
+};
+
+/* ════════════════════════════════════
+   QUALIFIER
+════════════════════════════════════ */
+var CHECKS = [
+  {label:'Has 10+ Google reviews',pts:2},
+  {label:'Owner uploaded their own photos to Maps',pts:2},
+  {label:'Located in a high-income target area',pts:2},
+  {label:'Category where customers search first (hotel/clinic/school)',pts:2},
+  {label:'Phone number listed on Google Maps',pts:1},
+  {label:'Active Instagram or Facebook page',pts:1},
+  {label:'Confirmed — zero website anywhere',pts:1}
+];
+var scoreState = CHECKS.map(function(){return false});
+
+function buildScorer() {
+  var el = document.getElementById('scoreChecks');
+  el.innerHTML = CHECKS.map(function(c,i){
+    return '<label class="sc-item" onclick="toggleCheck('+i+',this)">'
+      +'<div class="sc-box" id="scb'+i+'"></div>'
+      +'<span class="sc-label">'+c.label+'</span>'
+      +'<span class="sc-pts">+'+c.pts+'</span>'
+      +'</label>';
+  }).join('');
+}
+
+function toggleCheck(i,el){
+  scoreState[i]=!scoreState[i];
+  el.classList.toggle('checked',scoreState[i]);
+  document.getElementById('scb'+i).textContent=scoreState[i]?'✓':'';
+  calcScore();
+}
+
+function calcScore(){
+  var total=0;
+  CHECKS.forEach(function(c,i){if(scoreState[i])total+=c.pts});
+  var res=document.getElementById('scoreResult');
+  var num=document.getElementById('scoreNum');
+  res.style.display='block';
+  num.textContent=total+'/11';
+  num.className='score-num '+(total>=8?'hot':total>=5?'warm':'cold');
+  if(total>=8){
+    res.className='score-result hot';
+    document.getElementById('scoreVerdict').textContent='🔥 Build the demo — strong lead!';
+    document.getElementById('scoreAction').textContent='High probability of paying. Prioritise this business.';
+  } else if(total>=5){
+    res.className='score-result warm';
+    document.getElementById('scoreVerdict').textContent='⚠️ Build demo only if you have capacity';
+    document.getElementById('scoreAction').textContent='Possible close, not guaranteed. Fill 8+ leads first.';
+  } else {
+    res.className='score-result cold';
+    document.getElementById('scoreVerdict').textContent='❌ Skip this business';
+    document.getElementById('scoreAction').textContent='Not worth building a demo. Move on.';
+  }
+}
+
+function resetScore(){
+  scoreState=CHECKS.map(function(){return false});
+  document.querySelectorAll('.sc-item').forEach(function(el){el.classList.remove('checked')});
+  CHECKS.forEach(function(_,i){document.getElementById('scb'+i).textContent=''});
+  document.getElementById('scoreResult').style.display='none';
+}
+
+/* ════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════ */
+var views = {
+  dashboard:{title:'Dashboard',sub:'Monthly overview · ₦1M goal tracker'},
+  scanner:{title:'Maps Scanner',sub:'Find businesses without websites'},
+  qualifier:{title:'Lead Qualifier',sub:'Score leads before building demos'},
+  map:{title:'Map Hunt',sub:'Open Google Maps targeted searches'},
+  leads:{title:'Lead Pipeline',sub:'All tracked businesses'},
+  kanban:{title:'Kanban Board',sub:'Visual sales pipeline'},
+  analytics:{title:'Analytics',sub:'Pipeline performance & revenue charts'},
+  settings:{title:'Settings',sub:'API key, goals, data management'}
+};
+
+function nav(id, el) {
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+  var view = document.getElementById('view-'+id);
+  if(view) {view.classList.add('active'); view.classList.add('fade-in');}
+  if(el && el.classList) el.classList.add('active');
+  var info = views[id] || {title:id,sub:''};
+  document.getElementById('topTitle').textContent = info.title;
+  document.getElementById('topSub').textContent = info.sub;
+  if(id==='analytics') setTimeout(renderCharts,100);
+  if(id==='kanban') renderKanban();
+  if(id==='leads') renderLeads();
+  if(id==='dashboard') {renderDashboard();renderDashRecentLeads();}
+  if(id==='settings') loadSettings();
+}
+
+/* ════════════════════════════════════
+   CITY
+════════════════════════════════════ */
+function setCity(city, el) {
+  currentCity = city;
+  document.querySelectorAll('.city-btn').forEach(function(b){b.classList.remove('active')});
+  if(el) el.classList.add('active');
+  var sel = document.getElementById('citySelect');
+  if(sel) sel.value = city;
+  renderAreaTags();
+}
+
+function syncCitySelect() {
+  currentCity = document.getElementById('citySelect').value;
+  document.querySelectorAll('.city-btn').forEach(function(b){
+    var txt = b.textContent.trim().toLowerCase();
+    var match = (currentCity==='lagos'&&txt.includes('lagos'))
+      ||(currentCity==='abuja'&&txt.includes('abuja'))
+      ||(currentCity==='ph'&&(txt.includes('port')||txt.includes('⚓')));
+    b.classList.toggle('active',match);
+  });
+  renderAreaTags();
+}
+
+function renderAreaTags() {
+  var areas = CITIES[currentCity].areas;
+  document.getElementById('areaTags').innerHTML = areas.map(function(a){
+    return '<span class="area-tag" onclick="fillArea(\''+a+'\')">' + a + '</span>';
+  }).join('');
+}
+
+function fillArea(a) {
+  var cityLabel = {lagos:'Lagos',abuja:'Abuja',ph:'Port Harcourt'}[currentCity];
+  document.getElementById('loc').value = a + ', ' + cityLabel;
+  document.querySelectorAll('.area-tag').forEach(function(t){
+    t.classList.toggle('sel', t.textContent===a);
+  });
+}
+
+/* ════════════════════════════════════
+   SCANNER
+════════════════════════════════════ */
+function runScan() {
+  var cat = document.getElementById('cat').value;
+  var loc = document.getElementById('loc').value.trim();
+  if(!loc){alert('Select or type a neighbourhood first!');return;}
+  var q = encodeURIComponent(cat + ' ' + loc);
+  window.open('https://www.google.com/maps/search/' + q, '_blank');
+  setTimeout(function(){
+    if(confirm('✅ Google Maps opened!\n\n📋 AS YOU BROWSE:\n→ Click each business listing\n→ Check if "Website" button is MISSING\n→ Scroll to see review count & photos\n→ Run them through the Qualifier tab\n\nFound a strong lead? Click OK to add it now.')){
+      openAddModal();
+    }
+  }, 1200);
+}
+
+function launchMap() {
+  var cat = document.getElementById('mapCat').value;
+  var area = document.getElementById('mapArea').value.trim();
+  var city = document.getElementById('mapCity').value;
+  var q = encodeURIComponent(cat + ' in ' + (area?area+', ':'')+city);
+  window.open('https://www.google.com/maps/search/' + q, '_blank');
+}
+
+/* ════════════════════════════════════
+   LEADS
+════════════════════════════════════ */
+function openAddModal() {
+  document.getElementById('addModal').classList.add('open');
+  document.getElementById('aN').focus();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function addLead() {
+  var n = document.getElementById('aN').value.trim();
+  if(!n){alert('Business name is required!');return;}
+  var sc = parseInt(document.getElementById('aSc').value)||0;
+  leads.unshift({
+    id: Date.now(),
+    name: n,
+    cat: document.getElementById('aC').value.trim() || 'Business',
+    city: document.getElementById('aCi').value,
+    loc: document.getElementById('aL').value.trim(),
+    ph: document.getElementById('aPh').value.trim(),
+    st: document.getElementById('aSt').value,
+    stage: parseInt(document.getElementById('aStage').value)||0,
+    score: sc,
+    note: document.getElementById('aNote').value.trim(),
+    date: new Date().toLocaleDateString('en-NG'),
+    pitched: false
+  });
+  save();
+  closeModal('addModal');
+  ['aN','aC','aL','aPh','aSc','aNote'].forEach(function(x){document.getElementById(x).value='';});
+  document.getElementById('aSt').value='no-site';
+  document.getElementById('aStage').value='0';
+  renderLeads();
+  renderDashboard();
+  updateCounters();
+}
+
+function deleteLead(id) {
+  if(!confirm('Remove this lead?')) return;
+  leads = leads.filter(function(l){return l.id!==id});
+  save(); renderLeads(); renderKanban(); renderDashboard(); updateCounters();
+}
+
+function moveLead(id, stage) {
+  var l = leads.find(function(x){return x.id===id});
+  if(l){l.stage=stage;save();renderKanban();}
+}
+
+function sortLeads() {
+  sortByScore = !sortByScore;
+  renderLeads();
+}
+
+/* ════════════════════════════════════
+   RENDER LEADS
+════════════════════════════════════ */
+var catEmoji = {
+  'Hotel':'🏨','hotel':'🏨','Shortlet':'🏨','shortlet':'🏨',
+  'Event':'🎉','event':'🎉','Clinic':'🏥','clinic':'🏥',
+  'School':'🏫','school':'🏫','Restaurant':'🍽️','restaurant':'🍽️',
+  'Salon':'💇','salon':'💇','Boutique':'👗','boutique':'👗',
+  'Gym':'🏋️','gym':'🏋️','Logistics':'🚚','logistics':'🚚',
+  'Interior':'🛋️','interior':'🛋️','Car':'🚗','car':'🚗'
+};
+var cityIcon = {lagos:'🌊',abuja:'🏛️',ph:'⚓'};
+var cityLabel = {lagos:'Lagos',abuja:'Abuja',ph:'PH'};
+
+function getEmoji(cat) {
+  var lower = (cat||'').toLowerCase();
+  if(lower.includes('hotel')||lower.includes('shortlet')) return '🏨';
+  if(lower.includes('event')) return '🎉';
+  if(lower.includes('clinic')||lower.includes('hospital')) return '🏥';
+  if(lower.includes('school')) return '🏫';
+  if(lower.includes('restaurant')||lower.includes('food')||lower.includes('cater')) return '🍽️';
+  if(lower.includes('salon')||lower.includes('barber')) return '💇';
+  if(lower.includes('boutique')||lower.includes('fashion')) return '👗';
+  if(lower.includes('gym')||lower.includes('fitness')) return '🏋️';
+  if(lower.includes('logistic')) return '🚚';
+  if(lower.includes('interior')||lower.includes('decor')) return '🛋️';
+  if(lower.includes('car')||lower.includes('auto')) return '🚗';
+  return '🏢';
+}
+
+function renderLeads() {
+  var g = document.getElementById('leadsGrid');
+  if(!g) return;
+  var cityFilters = ['lagos','abuja','ph'];
+  var lst;
+  if(cityFilters.includes(currentFilter)){
+    lst = leads.filter(function(l){return l.city===currentFilter});
+  } else if(currentFilter==='all'){
+    lst = leads;
+  } else {
+    lst = leads.filter(function(l){return l.st===currentFilter});
+  }
+  if(sortByScore) lst = lst.slice().sort(function(a,b){return (b.score||0)-(a.score||0)});
+  document.getElementById('leadsSub').textContent = lst.length + ' business'+(lst.length!==1?'es':'')+' · '+leads.filter(function(l){return l.st==='no-site'}).length+' hot leads';
+  if(!lst.length){
+    g.innerHTML='<div class="empty"><span class="empty-icon">📋</span><h3>No leads here yet</h3><p>Use the Scanner to find businesses, score them with the Qualifier, then add strong ones to your pipeline.</p></div>';
+    return;
+  }
+  g.innerHTML = lst.map(function(l){
+    var em = getEmoji(l.cat);
+    var sp = {
+      'no-site':['hot','🔥 HOT LEAD'],
+      'has-site':['cold','✅ Has Website'],
+      'unknown-site':['check','⚠️ Check']
+    }[l.st]||['cold','—'];
+    var sc = l.score||0;
+    var scClass = sc>=8?'hot':sc>=5?'warm':'cold';
+    var scLabel = sc>0 ? (sc>=8?'⭐ ':sc>=5?'△ ':'▽ ')+'Score: '+sc+'/11' : '';
+    var wa = l.ph ? '234'+l.ph.replace(/^0/,'').replace(/\D/g,'') : '';
+    var ci = cityIcon[l.city]||'';
+    var stageLabel = STAGES[l.stage||0]||'Prospecting';
+    return '<div class="lcard '+l.st+'" id="lc'+l.id+'">'
+      +'<div class="lcard-icon">'+em+'</div>'
+      +'<div>'
+        +'<div class="lcard-name">'+ci+' '+escHtml(l.name)+'</div>'
+        +'<div class="lcard-meta">'
+          +'<span>📂 '+escHtml(l.cat)+'</span>'
+          +(l.loc?'<span>📍 '+escHtml(l.loc)+'</span>':'')
+          +(l.ph?'<span>📞 '+escHtml(l.ph)+'</span>':'')
+          +(scLabel?'<span class="score-badge '+scClass+'">'+scLabel+'</span>':'')
+          +'<span style="color:var(--m2)">📅 '+l.date+'</span>'
+          +'<span style="color:var(--m2)">🗂 '+stageLabel+'</span>'
+          +(l.pitched?'<span style="color:var(--cyan)">✉️ Pitched</span>':'')
+        +'</div>'
+        +(l.note?'<div style="font-size:10px;color:var(--m2);margin-top:4px;font-style:italic">'+escHtml(l.note.substring(0,80))+(l.note.length>80?'...':'')+'</div>':'')
+      +'</div>'
+      +'<div class="lcard-right">'
+        +'<span class="status-pill '+sp[0]+'">'+sp[1]+'</span>'
+        +'<div class="lcard-actions">'
+          +(l.st==='no-site'?'<span class="la" onclick="openPitch('+l.id+')">📱 Pitch</span>':'')
+          +(wa?'<a class="la" href="https://wa.me/'+wa+'" target="_blank">💬 WA</a>':'')
+          +'<span class="la del" onclick="deleteLead('+l.id+')">🗑️</span>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function flt(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(function(t){t.classList.remove('active')});
+  if(el) el.classList.add('active');
+  renderLeads();
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════ */
+function renderDashboard() {
+  var hot = leads.filter(function(l){return l.st==='no-site'}).length;
+  var rev = stats.closed * goals.rate;
+  var rem = Math.max(0, goals.revenue - rev);
+  var pct = Math.min(100, Math.round(rev/goals.revenue*100));
+  var rt = stats.pitched>0 ? Math.round(stats.closed/stats.pitched*100) : 0;
+  document.getElementById('dHot').textContent = hot;
+  document.getElementById('dPitched').textContent = stats.pitched;
+  document.getElementById('dClosed').textContent = stats.closed;
+  document.getElementById('dRev').textContent = '₦'+rev.toLocaleString();
+  document.getElementById('dRate').textContent = rt+'% close rate';
+  document.getElementById('dRem').textContent = '₦'+rem.toLocaleString()+' remaining';
+  document.getElementById('gFill').style.width = pct+'%';
+  document.getElementById('gMeta').textContent = '₦'+rev.toLocaleString()+' · '+stats.pitched+'/'+goals.pitches+' pitched';
+}
+
+function renderDashRecentLeads() {
+  var el = document.getElementById('dashRecentLeads');
+  if(!el) return;
+  var recent = leads.slice(0,5);
+  if(!recent.length){
+    el.innerHTML='<div class="empty" style="padding:30px"><span class="empty-icon" style="font-size:32px">📋</span><h3 style="font-size:15px">No leads yet</h3><p>Add your first lead to get started.</p></div>';
+    return;
+  }
+  el.innerHTML = recent.map(function(l){
+    var sp = {'no-site':['hot','🔥 HOT'],'has-site':['cold','✅'],'unknown-site':['check','⚠️']}[l.st]||['cold','—'];
+    return '<div class="lcard '+l.st+'" style="margin-bottom:7px;cursor:default">'
+      +'<div class="lcard-icon">'+getEmoji(l.cat)+'</div>'
+      +'<div><div class="lcard-name">'+(cityIcon[l.city]||'')+' '+escHtml(l.name)+'</div>'
+      +'<div class="lcard-meta"><span>'+escHtml(l.cat)+'</span>'+(l.loc?'<span>📍 '+escHtml(l.loc)+'</span>':'')+'</div></div>'
+      +'<div class="lcard-right"><span class="status-pill '+sp[0]+'">'+sp[1]+'</span>'
+      +'<div class="lcard-actions">'+(l.st==='no-site'?'<span class="la" onclick="openPitch('+l.id+')">📱 Pitch</span>':'')+'</div></div>'
+    +'</div>';
+  }).join('');
+}
+
+function updateCounters() {
+  var hot = leads.filter(function(l){return l.st==='no-site'}).length;
+  document.getElementById('hLeads').textContent = leads.length;
+  document.getElementById('hHot').textContent = hot;
+  document.getElementById('hClosed').textContent = stats.closed;
+  document.getElementById('navBadge').textContent = hot;
+  renderDashboard();
+}
+
+/* ════════════════════════════════════
+   KANBAN
+════════════════════════════════════ */
+var draggingId = null;
+
+function renderKanban() {
+  var board = document.getElementById('kanbanBoard');
+  if(!board) return;
+  board.innerHTML = STAGES.map(function(stage,si){
+    var stageleads = leads.filter(function(l){return (l.stage||0)===si});
+    return '<div class="k-col stage-'+si+'" ondragover="kDragOver(event,'+si+')" ondrop="kDrop(event,'+si+')" ondragleave="kDragLeave(this)">'
+      +'<div class="k-col-head">'
+        +'<span class="k-col-title">'+stage+'</span>'
+        +'<span class="k-count">'+stageleads.length+'</span>'
+      +'</div>'
+      +stageleads.map(function(l){
+        return '<div class="k-card stage-'+si+'" draggable="true" id="kc'+l.id+'" ondragstart="kDragStart(event,'+l.id+')">'
+          +'<div class="k-card-name">'+(cityIcon[l.city]||'')+' '+escHtml(l.name)+'</div>'
+          +'<div class="k-card-meta">'+escHtml(l.cat)+(l.loc?' · '+escHtml(l.loc):'')+' '+(l.score?'· Score:'+l.score:'')+'</div>'
+          +'<div class="k-card-actions">'
+            +(si>0?'<button class="k-btn" onclick="moveLead('+l.id+','+(si-1)+')">← Back</button>':'')
+            +(si<4?'<button class="k-btn" onclick="moveLead('+l.id+','+(si+1)+')" style="color:var(--lime);border-color:rgba(181,240,0,.2)">Forward →</button>':'')
+            +(l.st==='no-site'?'<button class="k-btn" onclick="openPitch('+l.id+')">📱 Pitch</button>':'')
+            +'<button class="k-btn del" onclick="deleteLead('+l.id+')">🗑️</button>'
+          +'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>';
+  }).join('');
+}
+
+function kDragStart(e, id) {
+  draggingId = id;
+  setTimeout(function(){
+    var el = document.getElementById('kc'+id);
+    if(el) el.classList.add('dragging');
+  },0);
+}
+
+function kDragOver(e, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function kDragLeave(el) {
+  el.classList.remove('drag-over');
+}
+
+function kDrop(e, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(draggingId !== null) {
+    moveLead(draggingId, stage);
+    draggingId = null;
+  }
+}
+
+/* ════════════════════════════════════
+   ANALYTICS CHARTS
+════════════════════════════════════ */
+var chartDefaults = {
+  color: '#f0f0ff',
+  plugins:{legend:{labels:{color:'#6b7baa',font:{family:'DM Sans'}}}},
+};
+
+function renderCharts() {
+  var statuses = {
+    'No Website': leads.filter(function(l){return l.st==='no-site'}).length,
+    'Has Website': leads.filter(function(l){return l.st==='has-site'}).length,
+    'Needs Check': leads.filter(function(l){return l.st==='unknown-site'}).length
+  };
+  var cities = {
+    'Lagos': leads.filter(function(l){return l.city==='lagos'}).length,
+    'Abuja': leads.filter(function(l){return l.city==='abuja'}).length,
+    'Port Harcourt': leads.filter(function(l){return l.city==='ph'}).length
+  };
+  var catCounts = {};
+  leads.forEach(function(l){
+    var c = l.cat||'Other';
+    catCounts[c] = (catCounts[c]||0)+1;
+  });
+  var catLabels = Object.keys(catCounts);
+  var catData = catLabels.map(function(k){return catCounts[k]});
+
+  var rev = stats.closed * goals.rate;
+  var rem = Math.max(0, goals.revenue - rev);
+
+  var COLORS = ['#b5f000','#00f5d4','#ff2d78','#ff7c1f','#8b5cf6','#ffd166'];
+
+  function makeChart(id, config) {
+    if(chartInstances[id]) { chartInstances[id].destroy(); }
+    var ctx = document.getElementById(id);
+    if(!ctx) return;
+    chartInstances[id] = new Chart(ctx, config);
+  }
+
+  makeChart('statusChart',{
+    type:'doughnut',
+    data:{
+      labels:Object.keys(statuses),
+      datasets:[{data:Object.values(statuses),backgroundColor:['rgba(181,240,0,.7)','rgba(107,123,170,.4)','rgba(255,209,102,.7)'],borderColor:'#0e0e1c',borderWidth:3}]
+    },
+    options:{plugins:{legend:{labels:{color:'#6b7baa'}}},cutout:'65%'}
+  });
+
+  makeChart('cityChart',{
+    type:'bar',
+    data:{
+      labels:Object.keys(cities),
+      datasets:[{data:Object.values(cities),backgroundColor:['rgba(181,240,0,.6)','rgba(139,92,246,.6)','rgba(0,245,212,.6)'],borderRadius:8,borderWidth:0}]
+    },
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7baa'},grid:{color:'rgba(30,30,58,.8)'}},y:{ticks:{color:'#6b7baa'},grid:{color:'rgba(30,30,58,.8)'}}}}
+  });
+
+  makeChart('revenueChart',{
+    type:'doughnut',
+    data:{
+      labels:['Earned','Remaining'],
+      datasets:[{data:[rev,rem],backgroundColor:['rgba(181,240,0,.8)','rgba(30,30,58,.6)'],borderColor:'#0e0e1c',borderWidth:3}]
+    },
+    options:{plugins:{legend:{labels:{color:'#6b7baa'}}},cutout:'60%'}
+  });
+
+  makeChart('catChart',{
+    type:'bar',
+    data:{
+      labels:catLabels.slice(0,8),
+      datasets:[{data:catData.slice(0,8),backgroundColor:COLORS,borderRadius:6,borderWidth:0}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7baa'},grid:{color:'rgba(30,30,58,.8)'}},y:{ticks:{color:'#6b7baa'},grid:{display:false}}}}
+  });
+}
+
+/* ════════════════════════════════════
+   PITCH SCRIPTS
+════════════════════════════════════ */
+function openPitch(id) {
+  var l = leads.find(function(x){return x.id===id});
+  if(!l) return;
+  activePitchLead = l;
+  if(!l.pitched){ l.pitched=true; stats.pitched++; save(); }
+  document.getElementById('pitchBizName').textContent = (cityIcon[l.city]||'')+' '+l.name+(l.loc?' · '+l.loc:'');
+  document.querySelectorAll('.ptab').forEach(function(t,i){t.classList.toggle('active',i===0)});
+  currentPitchType = 'wa';
+  document.getElementById('pitchText').textContent = genPitch(l,'wa');
+  document.getElementById('aiStatus').style.display='none';
+  document.getElementById('pitchModal').classList.add('open');
+  updateCounters();
+}
+
+function showPitch(type, el) {
+  currentPitchType = type;
+  document.querySelectorAll('.ptab').forEach(function(t){t.classList.remove('active')});
+  if(el) el.classList.add('active');
+  if(type==='ai') {
+    generateAIPitch();
+  } else {
+    document.getElementById('aiStatus').style.display='none';
+    document.getElementById('pitchText').textContent = genPitch(activePitchLead, type);
+  }
+}
+
+function genPitch(l, type) {
+  if(!l) return '';
+  var n=l.name, c=(l.cat||'business').toLowerCase(), loc=l.loc||(cityLabel[l.city]||'your area');
+  if(type==='wa') return 'Hello! 👋\n\nI came across *'+n+'* on Google Maps and noticed you don\'t have a website yet.\n\nAs a web designer based in '+cityLabel[l.city]+', I\'ve already built a *free demo site* specifically for '+n+' — zero cost, zero strings. It shows your '+c+' services, location, contacts, and looks perfect on all phones.\n\nI\'d love to show it to you. Can I send the link right now? Takes about 60 seconds to view 🙏\n\n— [Your Name] | Web Designer';
+  if(type==='call') return '─── PHONE CALL SCRIPT ───\n\n"Good day, may I speak with the owner of '+n+'?"\n\n[When connected:]\n"Hello! I\'m [Your Name], a web designer. I was researching '+c+' businesses in '+loc+' and noticed '+n+' doesn\'t have a website yet.\n\nI\'ve already built a demo site for your business — completely free, no obligation. Just want to show you what it could look like.\n\nCan I send the link to your WhatsApp? Takes 30 seconds to view."\n\n[If YES] → "Great — what\'s the best number?"\n[Asks price] → "₦250,000 complete — domain, design, 12 months hosting, WhatsApp button. But see the demo first, fair?"\n[Not interested] → "No problem at all. Have a great day!"';
+  if(type==='email') return 'Subject: Free website demo I built for '+n+'\n\nHello,\n\nMy name is [Your Name] and I\'m a web designer based in '+cityLabel[l.city]+'.\n\nI was researching '+c+' businesses in '+loc+' and noticed '+n+' doesn\'t have a website yet. So I went ahead and built a free demo — no obligation.\n\nThe demo includes:\n✅ Your services / menu / rooms\n✅ Location & contact info\n✅ WhatsApp contact button\n✅ Looks great on mobile\n\nReply to this email or WhatsApp me on [Your Number] and I\'ll send the link immediately.\n\nFull package: ₦250,000 — domain + 12 months hosting + design + first month of edits.\n\nBest,\n[Your Name]\n[Your Number]';
+  if(type==='inperson') return '─── IN-PERSON SCRIPT ───\n\n[Walk in. Have demo open on your phone.]\n\n"Good day! I\'m [Your Name], a web designer. I was in the area and wanted to show you something quickly."\n\n[Show the phone]\n\n"I built this website demo for '+n+'. I noticed you didn\'t have a website, so I made this to show you what it could look like. The real version would have all your actual details, photos, services — everything.\n\nWhat do you think?"\n\n[Let them look. Stay quiet for 10 seconds. Let the demo speak.]\n\n"If you like it, I can have the real version live in one week. It\'s ₦250,000 — that includes domain, hosting for a full year, and one month of free updates.\n\nCan we make this happen?"';
+  return '';
+}
+
+async function generateAIPitch() {
+  var key = localStorage.getItem('lhp_apikey');
+  var aiStatus = document.getElementById('aiStatus');
+  var pitchText = document.getElementById('pitchText');
+
+  if(!key) {
+    pitchText.textContent = '⚠️ No API key configured.\n\nGo to Settings → Claude AI → Enter your Anthropic API key to enable AI-generated pitches.\n\nYour key is stored locally and never shared.';
+    return;
+  }
+
+  var l = activePitchLead;
+  if(!l) return;
+
+  aiStatus.style.display='flex';
+  aiStatus.className='ai-status ai-thinking';
+  document.getElementById('aiStatusText').textContent='Generating custom pitch with Claude AI...';
+  pitchText.textContent='⏳ Claude is crafting a personalised pitch for '+l.name+'...';
+
+  var prompt = 'You are a Nigerian web designer based in '+cityLabel[l.city]+' who builds business websites for ₦250,000. Write a short, natural WhatsApp message to the owner of "'+l.name+'", a '+l.cat+' located in '+(l.loc||cityLabel[l.city])+'. The business has NO website. Your approach: You built them a FREE demo site and want to show it to them. Be friendly, conversational, and Nigerian in tone. Use some emojis. Mention the free demo. Keep it under 100 words. Do not include placeholders like [Your Name] — write it as if from "David" in '+cityLabel[l.city]+'. Make it sound genuine, not spammy.';
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    var data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    var text = data.content && data.content[0] && data.content[0].text;
+    if(!text) throw new Error('No response');
+    pitchText.textContent = text;
+    aiStatus.className='ai-status ai-done';
+    document.getElementById('aiStatusText').textContent='✨ AI pitch generated';
+  } catch(err) {
+    aiStatus.className='ai-status ai-error';
+    document.getElementById('aiStatusText').textContent='Error: '+err.message;
+    pitchText.textContent='Failed to generate AI pitch.\n\nError: '+err.message+'\n\nCheck your API key in Settings.';
+  }
+}
+
+function copyPitch() {
+  navigator.clipboard.writeText(document.getElementById('pitchText').textContent).then(function(){
+    var b = document.querySelector('#pitchModal .copy-btn');
+    b.textContent='✅ Copied to clipboard!';
+    setTimeout(function(){b.textContent='📋 Copy Script'},2000);
+  });
+}
+
+/* ════════════════════════════════════
+   TRACKER
+════════════════════════════════════ */
+function addClosed() {
+  stats.closed++;
+  save();
+  updateCounters();
+  var rev = stats.closed * goals.rate;
+  if(rev >= goals.revenue) {
+    setTimeout(function(){
+      alert('🎉🎉🎉\n\n₦'+goals.revenue.toLocaleString()+' MONTHLY GOAL HIT!\n\nYou closed '+stats.closed+' clients. Congratulations! 🚀');
+    },300);
+  }
+}
+
+function resetMonth() {
+  if(!confirm('Reset monthly tracker? Your leads will stay in the pipeline.')) return;
+  stats = {closed:0,pitched:0};
+  leads.forEach(function(l){l.pitched=false});
+  save();
+  updateCounters();
+  renderLeads();
+}
+
+/* ════════════════════════════════════
+   EXPORT / IMPORT
+════════════════════════════════════ */
+function exportCSV() {
+  if(!leads.length){alert('No leads yet!');return}
+  var cols = ['Name','Category','City','Location','Phone','Score','Status','Stage','Date','Pitched','Notes'];
+  var rows = leads.map(function(l){
+    return [
+      '"'+l.name.replace(/"/g,'""')+'"',
+      '"'+(l.cat||'').replace(/"/g,'""')+'"',
+      '"'+(cityLabel[l.city]||l.city)+'"',
+      '"'+(l.loc||'')+'"',
+      '"'+(l.ph||'')+'"',
+      l.score||0,
+      '"'+(l.st==='no-site'?'No Website':l.st==='has-site'?'Has Website':'Unknown')+'"',
+      '"'+(STAGES[l.stage||0]||'Prospecting')+'"',
+      '"'+(l.date||'')+'"',
+      l.pitched?'Yes':'No',
+      '"'+(l.note||'').replace(/"/g,'""')+'"'
+    ].join(',');
+  });
+  var csv = [cols.join(',')].concat(rows).join('\n');
+  dlFile('leadhunter-'+new Date().toISOString().split('T')[0]+'.csv', csv, 'text/csv');
+}
+
+function exportData() {
+  dlFile('leadhunter-backup-'+new Date().toISOString().split('T')[0]+'.json',
+    JSON.stringify({leads,stats,goals},null,2),'application/json');
+}
+
+function importData() {
+  var inp = document.createElement('input');
+  inp.type='file';inp.accept='.json';
+  inp.onchange = function(e) {
+    var f = e.target.files[0];
+    var r = new FileReader();
+    r.onload = function(ev) {
+      try {
+        var d = JSON.parse(ev.target.result);
+        if(confirm('Import '+((d.leads||[]).length)+' leads? This will REPLACE your current data.')) {
+          leads = d.leads||[];
+          stats = d.stats||{closed:0,pitched:0};
+          goals = d.goals||goals;
+          save();
+          updateCounters();
+          renderLeads();
+          renderKanban();
+          alert('✅ Import successful!');
+        }
+      } catch(err) { alert('❌ Invalid JSON file'); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+function clearAll() {
+  if(!confirm('⚠️ This will DELETE all your leads and reset all stats. Are you sure?')) return;
+  if(!confirm('Final confirmation — all data will be lost!')) return;
+  leads=[];stats={closed:0,pitched:0};save();
+  updateCounters();renderLeads();renderKanban();renderDashboard();
+  alert('All data cleared.');
+}
+
+function dlFile(name, content, type) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
+}
+
+/* ════════════════════════════════════
+   SETTINGS
+════════════════════════════════════ */
+function saveApiKey() {
+  var k = document.getElementById('apiKeyInput').value.trim();
+  if(!k){alert('Enter an API key first');return}
+  localStorage.setItem('lhp_apikey', k);
+  apiKey = k;
+  loadSettings();
+  alert('✅ API key saved!');
+}
+
+function clearApiKey() {
+  localStorage.removeItem('lhp_apikey');
+  apiKey = '';
+  document.getElementById('apiKeyInput').value = '';
+  loadSettings();
+}
+
+function saveGoals() {
+  goals.revenue = parseInt(document.getElementById('setGoal').value)||1000000;
+  goals.pitches = parseInt(document.getElementById('setPitchTarget').value)||40;
+  goals.rate = parseInt(document.getElementById('setRate').value)||250000;
+  save();
+  updateCounters();
+  alert('✅ Goals saved!');
+}
+
+function loadSettings() {
+  var k = localStorage.getItem('lhp_apikey')||'';
+  var statusEl = document.getElementById('apiKeyStatus');
+  if(k) {
+    statusEl.textContent = '✅ Key saved: sk-ant-...'+k.slice(-6);
+    statusEl.className = 'settings-token-status ok';
+  } else {
+    statusEl.textContent = 'No key saved';
+    statusEl.className = 'settings-token-status';
+  }
+  var gi = document.getElementById('setGoal');
+  if(gi) gi.value = goals.revenue;
+  var pi = document.getElementById('setPitchTarget');
+  if(pi) pi.value = goals.pitches;
+  var ri = document.getElementById('setRate');
+  if(ri) ri.value = goals.rate;
+}
+
+/* ════════════════════════════════════
+   MODAL CLOSE ON BACKDROP
+════════════════════════════════════ */
+['pitchModal','addModal'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target===this) this.classList.remove('open');
+  });
+});
+
+/* ════════════════════════════════════
+   BOOT
+════════════════════════════════════ */
+buildScorer();
+renderAreaTags();
+updateCounters();
+renderDashboard();
+renderDashRecentLeads();
+</script>
+</body>
+</html>
